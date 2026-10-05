@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HENKATEN Plant-2</title>
+<meta name="description" content="Henkaten Management System - PT Nusa Toyotetsu Plant-2">
+<meta name="theme-color" content="#0b1a33">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HENKATEN">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#0b1a33;color:#e8eefb;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  /* Aplikasi Apps Script ditampilkan memenuhi layar, di bawah area status bar HP */
+  #app{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:0;width:100%;height:calc(100% - env(safe-area-inset-top,0px));border:0;background:#0b1a33}
+  .cover{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:24px;text-align:center;
+    background:radial-gradient(900px 520px at 50% 36%,#17408f 0,transparent 62%),#0b1a33;transition:opacity .35s ease}
+  .cover[hidden]{display:none}
+  .cover.out{opacity:0;pointer-events:none}
+  .box{max-width:420px}
+  .box img{width:112px;height:112px;border-radius:26px;box-shadow:0 12px 34px rgba(0,0,0,.45)}
+  h1{font-size:24px;margin:18px 0 4px;letter-spacing:.02em}
+  p{margin:6px 0;color:#a9bbdc;font-size:14px;line-height:1.5}
+  .spin{width:34px;height:34px;margin:22px auto 10px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:#60a5fa;animation:sp 0.9s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  button{font:inherit;font-weight:700;color:#fff;background:#1769ff;border:0;border-radius:10px;padding:11px 20px;margin-top:14px;cursor:pointer}
+  button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+  code{display:block;margin-top:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,.08);color:#dbeafe;font-size:12px;word-break:break-all;text-align:left}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.5s}.cover{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- Layar tunggu saat aplikasi sedang dimuat -->
+<div id="load" class="cover" role="status" aria-live="polite">
+  <div class="box">
+    <img src="icon-192.png" alt="">
+    <h1>HENKATEN Plant-2</h1>
+    <p>One Team, One Vision : 1% Better Every Day</p>
+    <div class="spin" aria-hidden="true"></div>
+    <p id="msg">Memuat aplikasi...</p>
+    <button id="retry" type="button" hidden>Muat ulang</button>
+  </div>
+</div>
+
+<!-- Tampil bila perangkat tidak tersambung internet -->
+<div id="offline" class="cover" hidden role="alert">
+  <div class="box">
+    <img src="icon-192.png" alt="">
+    <h1>Tidak ada koneksi</h1>
+    <p>Aplikasi Henkaten membutuhkan internet untuk membaca dan menyimpan data. Periksa Wi-Fi atau data seluler, lalu coba lagi.</p>
+    <button id="again" type="button">Coba lagi</button>
+  </div>
+</div>
+
+<!-- Tampil bila alamat aplikasi belum diisi dengan benar -->
+<div id="setup" class="cover" hidden role="alert">
+  <div class="box">
+    <h1>Alamat aplikasi belum diisi</h1>
+    <p>Buka file index.html ini, lalu isi APP_URL dengan alamat Web App Apps Script yang berakhiran /exec.</p>
+    <code>var APP_URL = 'https://script.google.com/macros/s/..../exec';</code>
+  </div>
+</div>
+
+<iframe id="app" title="HENKATEN Plant-2" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
+
+<script>
+/* ===== Alamat Web App Google Apps Script (deployment aplikasi Henkaten) =====
+   Bila nanti membuat deployment BARU dan alamatnya berubah, ganti alamat di bawah ini.
+   Bila hanya "Manage deployments > Edit > New version", alamatnya tetap dan file ini tidak perlu diubah. */
+var APP_URL = 'https://script.google.com/macros/s/AKfycbxluKJVQ4J1QDcWXzv4mWI4VBirEf40OOf4h3MTnDjYx-C8rHH9j2tVZnSkyBIOeh_y/exec';
+
+(function () {
+  var frame = document.getElementById('app'), load = document.getElementById('load'), off = document.getElementById('offline'),
+      setup = document.getElementById('setup'), msg = document.getElementById('msg'), retry = document.getElementById('retry'), slow = null;
+
+  function show(el) { el.hidden = false; el.classList.remove('out'); }
+  function hide(el) { el.classList.add('out'); setTimeout(function () { el.hidden = true; }, 380); }
+
+  function start() {
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec/.test(APP_URL)) { load.hidden = true; show(setup); return; }
+    if (!navigator.onLine) { load.hidden = true; show(off); return; }
+    off.hidden = true; show(load); msg.textContent = 'Memuat aplikasi...'; retry.hidden = true;
+    clearTimeout(slow);
+    slow = setTimeout(function () { msg.textContent = 'Koneksi lambat. Mohon tunggu, atau muat ulang.'; retry.hidden = false; }, 15000);
+    frame.src = APP_URL;
+  }
+  frame.addEventListener('load', function () { if (!frame.src || frame.src === 'about:blank') return; clearTimeout(slow); hide(load); });
+  retry.addEventListener('click', start);
+  document.getElementById('again').addEventListener('click', start);
+  window.addEventListener('online', function () { if (!off.hidden) start(); });
+  window.addEventListener('offline', function () { show(off); });
+  window.hkStart = function (url) { if (url) APP_URL = url; start(); }; // dipakai untuk pengujian
+
+  start();
+
+  /* Service worker: membuat aplikasi bisa dipasang ke layar utama dan layar tunggu tetap tampil saat offline */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
