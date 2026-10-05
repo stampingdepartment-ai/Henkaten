@@ -67,7 +67,9 @@
   </div>
 </div>
 
-<iframe id="app" title="HENKATEN Plant-2" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
+<!-- credentialless: aplikasi dimuat tanpa akun Google yang sedang login di browser, seperti di tab samaran.
+     Ini mencegah error "Maaf, saat ini tidak dapat membuka file" pada HP yang menyimpan lebih dari satu akun Google. -->
+<iframe id="app" title="HENKATEN Plant-2" credentialless allow="fullscreen; clipboard-write" allowfullscreen></iframe>
 
 <script>
 /* ===== Alamat Web App Google Apps Script (deployment aplikasi Henkaten) =====
@@ -97,6 +99,27 @@ var APP_URL = 'https://script.google.com/macros/s/AKfycbxluKJVQ4J1QDcWXzv4mWI4VB
   window.addEventListener('offline', function () { show(off); });
   window.hkStart = function (url) { if (url) APP_URL = url; start(); }; // dipakai untuk pengujian
 
+  /* ===== penyimpanan titipan aplikasi =====
+     Karena bingkai aplikasi berjalan tanpa akun dan tanpa penyimpanan tetap, aplikasi menitipkan sesi login
+     dan pengaturannya (bahasa, menu, dashboard) ke halaman ini. Hanya pesan dari bingkai aplikasi yang
+     berada di dalam halaman ini, dengan asal Google Apps Script, yang dilayani. */
+  var KEEP = 'hkapp:', FROM = /^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/, KEY = /^henkaten\w{0,40}$/;
+  window.addEventListener('message', function (ev) {
+    var m = ev.data;
+    if (!FROM.test(ev.origin) || !m || typeof m !== 'object' || !m.hk) return;
+    try { if (!ev.source || ev.source.top !== window) return; } catch (e) { return; }
+    try {
+      if (m.hk === 'load') {
+        var items = {};
+        for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k.indexOf(KEEP) === 0) items[k.slice(KEEP.length)] = localStorage.getItem(k); }
+        ev.source.postMessage({ hk: 'data', items: items }, ev.origin);
+      } else if (m.hk === 'set' && KEY.test(m.k) && typeof m.v === 'string' && m.v.length < 20000) localStorage.setItem(KEEP + m.k, m.v);
+      else if (m.hk === 'del' && KEY.test(m.k)) localStorage.removeItem(KEEP + m.k);
+    } catch (e) {
+      if (m.hk === 'load') { try { ev.source.postMessage({ hk: 'data', items: {} }, ev.origin); } catch (x) {} }
+    }
+  });
+
   start();
 
   /* Service worker: membuat aplikasi bisa dipasang ke layar utama dan layar tunggu tetap tampil saat offline */
@@ -107,3 +130,4 @@ var APP_URL = 'https://script.google.com/macros/s/AKfycbxluKJVQ4J1QDcWXzv4mWI4VB
 </script>
 </body>
 </html>
+
