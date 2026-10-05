@@ -3,7 +3,7 @@
    dipasang ke layar utama dan tetap menampilkan layar tunggu / pesan offline saat tidak ada internet.
    Data Henkaten sendiri selalu diambil langsung dari Google Apps Script, tidak pernah disimpan di sini.
    Naikkan angka versi di bawah setiap kali index.html, ikon, atau manifest diubah. */
-const CACHE = 'henkaten-pwa-v1';
+const CACHE = 'henkaten-pwa-v2';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -30,3 +30,4 @@ self.addEventListener('fetch', function (e) {
     })
   );
 });
+
